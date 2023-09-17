@@ -6,12 +6,6 @@
 #include <pybind11/stl.h>
 #include <vector>
 
-#ifdef ZERO_BANK_CONFLICTS
-#define CONFLICT_FREE_OFFSET(n) \ (((n) >> NUM_BANKS) + ((n) >> (2 * LOG_NUM_BANKS)))
-#else
-#define CONFLICT_FREE_OFFSET(n) ((n) >> LOG_NUM_BANKS)
-#endif
-
 __global__
 void gpu_sum_scan_blelloch(float* const d_out,
 	const float* const d_in,
@@ -128,24 +122,6 @@ void gpu_sum_scan_blelloch(float* const d_out,
 }
 
 
-__global__ void compute_smoothed_list(float *prefix_sum, float *inlist, float *outlist, int n, int h) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= n) return;
-
-    // start和end的计算应与Python实现一致
-    int start = max(0, i - h);
-    int end = min(n - 1, i + h);
-
-    // 计算平滑窗口的和
-    float sum = prefix_sum[end] - prefix_sum[start] + inlist[end];
-
-    // 计算窗口内的元素数量
-    int num_elements = end - start + 1;
-
-    // 计算平均值
-    outlist[i] = sum / num_elements;
-}
-
 std::vector<float> runSmoothListWithBlellochScan(const std::vector<float>& h_inlist, int h) {
     int n = h_inlist.size();
     std::vector<float> h_prefix_sum(n, 0.0f);  // host prefix sum
@@ -193,46 +169,7 @@ std::vector<float> runSmoothListWithBlellochScan(const std::vector<float>& h_inl
 }
 
 
-
-std::vector<float> runBlellochScan(const std::vector<float>& h_idata) {
-    size_t numElems = h_idata.size();
-    std::vector<float> h_odata(numElems);  // host output
-    std::vector<float> h_block_sums((numElems + 2047) / 2048);  // for storing block-level sums
-
-    float *d_idata, *d_odata, *d_block_sums;  // device arrays
-
-    // Allocate device memory
-    cudaMalloc((void**)&d_idata, numElems * sizeof(float));
-    cudaMalloc((void**)&d_odata, numElems * sizeof(float));
-    cudaMalloc((void**)&d_block_sums, h_block_sums.size() * sizeof(float));
-
-    // Copy data from host to device
-    cudaMemcpy(d_idata, h_idata.data(), numElems * sizeof(float), cudaMemcpyHostToDevice);
-
-    // Configure and launch kernel
-    int blockSize = 1024;  // maximum half block size for max 2048 elements
-    int gridSize = (numElems + 2 * blockSize - 1) / (2 * blockSize);  // each block handles 2 * blockSize elements
-    int sharedMemSize = 2 * blockSize * sizeof(float);  // 2 * blockSize to handle 2048 elements
-
-    gpu_sum_scan_blelloch<<<gridSize, blockSize, sharedMemSize>>>(d_odata, d_idata, d_block_sums, numElems);
-
-    // Copy results back to host
-    cudaMemcpy(h_odata.data(), d_odata, numElems * sizeof(float), cudaMemcpyDeviceToHost);
-
-    // Free device memory
-    cudaFree(d_idata);
-    cudaFree(d_odata);
-    cudaFree(d_block_sums);
-
-    return h_odata;
-}
-
-
-
-
-
 PYBIND11_MODULE(gpu_library, m) {
     //m.def("smooth_cuda", &smooth_cuda, "A function that smooths a list using CUDA");
     m.def("runSmoothListWithBlellochScan", &runSmoothListWithBlellochScan, "A function that smooths a list using Blelloch Sum Scan Algorithm");
-    m.def("prescan", &runBlellochScan, "prescan");
 }

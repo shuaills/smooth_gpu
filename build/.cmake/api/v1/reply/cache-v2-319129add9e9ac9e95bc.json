@@ -863,7 +863,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "Project"
+			"value" : "MyProject"
 		},
 		{
 			"name" : "CMAKE_RANLIB",
@@ -1978,6 +1978,42 @@
 			"value" : "[TRUE][v()]"
 		},
 		{
+			"name" : "MyProject_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/shuai/smooth_gpu/build"
+		},
+		{
+			"name" : "MyProject_IS_TOP_LEVEL",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "ON"
+		},
+		{
+			"name" : "MyProject_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/shuai/smooth_gpu"
+		},
+		{
 			"name" : "PYTHON_DEBUG_LIBRARY",
 			"properties" : 
 			[
@@ -2072,42 +2108,6 @@
 			],
 			"type" : "UNINITIALIZED",
 			"value" : ""
-		},
-		{
-			"name" : "Project_BINARY_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "/home/shuai/smooth_gpu/build"
-		},
-		{
-			"name" : "Project_IS_TOP_LEVEL",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "ON"
-		},
-		{
-			"name" : "Project_SOURCE_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "/home/shuai/smooth_gpu"
 		},
 		{
 			"name" : "gpu_library_LIB_DEPENDS",

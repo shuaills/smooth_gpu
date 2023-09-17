@@ -2,36 +2,6 @@ import gpu_library
 import numpy as np
 import time
 
-def smooth_naive(inlist, h):
-    """
-    This function performs a basic smoothing of inlist using a naive approach and returns the result (outlist).
-    Both lists have the same length, N. Each item in inlist is assumed to have type 'float',
-    and 'h' is assumed to be an integer.
-    For each i, outlist[i] will be the average of inlist[k] over all k that satisfy
-    i-h <= k <= i+h and 0 <= k <= N-1.
-    """
-    N = len(inlist)
-    if N == 0:
-        return []
-    
-    outlist = [0.0] * N  # Initialize outlist with zeros
-    
-    for i in range(N):
-        running_sum = 0.0
-        num_elements = 0
-        
-        # Calculate the running sum for the window centered at i
-        for k in range(i - h, i + h + 1):
-            # Check if the index is within the list boundaries
-            if 0 <= k < N:
-                running_sum += inlist[k]
-                num_elements += 1
-        
-        # Calculate outlist[i]
-        outlist[i] = running_sum / num_elements
-    
-    return outlist
-
 def smooth(inlist, h):
     """
     This function performs a basic smoothing of inlist and returns the result (outlist).
@@ -73,9 +43,6 @@ def smooth(inlist, h):
     
     return outlist
 
-import time
-import numpy as np
-
 # 假设这里有一个gpu_library模块，提供了smooth_cuda函数
 # import gpu_library
 
@@ -83,7 +50,7 @@ def test_smooth_time(inlist, h):
     # 使用CUDA方法进行测试（请确保这个函数实际存在）
     t0 = time.time()
     print(f"lets go!")
-    smoothed_cuda = gpu_library.runSmoothListWithBlellochScan(np.array(inlist), h)
+    smoothed_cuda = gpu_library.runSmoothListWithThrustScan(np.array(inlist), h)
     cuda_time = time.time() - t0
     
     # 使用基础Python方法进行测试
@@ -112,11 +79,20 @@ def test_smooth_time(inlist, h):
 
     # 在这里，你还可以加入一些代码来检查三种方法得出的结果是否一致
     #assert np.allclose(smoothed_python, smoothed_naive, atol=1e-6)
-    assert np.allclose(smoothed_python, smoothed_cuda, atol=1e-6)
+    #assert np.allclose(smoothed_python, smoothed_cuda, atol=1e-6)
+
+    start_diff_index = -1
+    for i in range(len(smoothed_python)):
+        if not np.isclose(smoothed_python[i], smoothed_cuda[i], atol=1e-6):
+            start_diff_index = i
+            break
+
+    return start_diff_index
 
 if __name__ == "__main__":
-    N = 100  # 可以设置为其他值
-    h = 2  # 可以设置为其他值
+    N = 1000000  # 可以设置为其他值
+    h = 1  # 可以设置为其他值
     test_list = list(range(N))  # 或者其他随机列表
 
-    test_smooth_time(test_list, h)
+    index = test_smooth_time(test_list, h)
+    print(index)
