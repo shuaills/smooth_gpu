@@ -4,3 +4,8 @@
 *.ptx
 *.cubin
 *.fatbin
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+Makefile
+gpu_library.so
