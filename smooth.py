@@ -1,3 +1,5 @@
+from typing import List
+
 def smooth(inlist, h):
     """
     This function performs a basic smoothing of inlist and returns the result (outlist).
@@ -38,3 +40,41 @@ def smooth(inlist, h):
         outlist[i] = running_sum / num_elements
     
     return outlist
+
+def smooth_prefix(inlist: List[float], h: int) -> List[float]:
+
+    N = len(inlist)
+    if N == 0:
+        return []
+    
+    prefix_sum = [0] * (N + 1)
+    for i in range(N):
+        prefix_sum[i+1] = prefix_sum[i] + inlist[i]
+
+    outlist = [0.0] * N
+    for i in range(N):
+        left = max(0, i-h)
+        right = min(N, i+h+1)
+        window_sum = prefix_sum[right] - prefix_sum[left]
+        num_elements = right - left
+        outlist[i] = window_sum / num_elements
+
+    return outlist
+
+import random
+import time
+
+inlist = [random.random() for _ in range(10**8)]
+h = 1000
+
+def test(func):
+    start = time.time()
+    outlist = func(inlist, h)
+    end = time.time()
+    print(end - start)
+
+print("Testing smooth...")
+test(smooth) 
+
+print("Testing smooth_prefix...")
+test(smooth_prefix)

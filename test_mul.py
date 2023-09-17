@@ -50,12 +50,15 @@ def test_smooth_time(inlist, h):
     # 使用CUDA方法进行测试（请确保这个函数实际存在）
     t0 = time.time()
     print(f"lets go!")
-    smoothed_cuda = gpu_library.runSmoothListWithThrustScan(np.array(inlist), h)
+    #smoothed_cuda = gpu_library.runSmoothListWithBlellochScan(np.array(inlist), h)
+    smoothed_cuda = gpu_library.runSmoothListWithBlellochScan(np.array(inlist), h)
+    print(len(smoothed_cuda))
     cuda_time = time.time() - t0
     
     # 使用基础Python方法进行测试
     t0 = time.time()
     smoothed_python = smooth(inlist, h)
+    print(len(smoothed_python))
     python_time = time.time() - t0
 
     # 使用前缀和方法进行测试
@@ -90,8 +93,8 @@ def test_smooth_time(inlist, h):
     return start_diff_index
 
 if __name__ == "__main__":
-    N = 1000000  # 可以设置为其他值
-    h = 1  # 可以设置为其他值
+    N = 100000000  # 可以设置为其他值
+    h = 1000  # 可以设置为其他值
     test_list = list(range(N))  # 或者其他随机列表
 
     index = test_smooth_time(test_list, h)
