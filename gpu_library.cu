@@ -33,33 +33,29 @@ struct calculate_smooth {
     }
 };
 
-const int BATCH_SIZE = 1024 * 1024;  // 可根据实际硬件资源进行调整
+const int BATCH_SIZE = 1024 * 1024;
 
 std::vector<double> runSmoothListWithBlellochScan(const std::vector<double>& h_inlist, int h) {
     const int N = h_inlist.size();
     const int num_batches = (N + BATCH_SIZE - 1) / BATCH_SIZE;
 
-    thrust::device_vector<double> d_inlist(h_inlist);  // 一开始就将整个列表传到设备上
+    thrust::device_vector<double> d_inlist(h_inlist);
     thrust::device_vector<double> d_prefix_sum(N);
     thrust::device_vector<double> d_outlist(N);
 
-    // 计算整个列表的前缀和
     thrust::inclusive_scan(d_inlist.begin(), d_inlist.end(), d_prefix_sum.begin());
 
-    // 执行批处理
     for (int b = 0; b < num_batches; ++b) {
         int start_idx = b * BATCH_SIZE;
         int end_idx = std::min((b + 1) * BATCH_SIZE, N);
 
-        // 创建 calculate_smooth 对象
         calculate_smooth smooth_calculator(h, thrust::raw_pointer_cast(&d_prefix_sum[0]), N);
 
-        // 执行平滑计算
         thrust::transform(
             thrust::counting_iterator<int>(start_idx),
             thrust::counting_iterator<int>(end_idx),
             d_outlist.begin() + start_idx,
-            smooth_calculator  // 传递 calculate_smooth 对象
+            smooth_calculator
         );
     }
 
