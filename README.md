@@ -1,9 +1,5 @@
 # pybind11-cuda
 
-Compiles out of the box with cmake 
-
-Numpy integration 
-
 C++ Templating for composable kernels with generic data types 
 
 Originally based on https://github.com/torstem/demo-cuda-pybind11
@@ -21,5 +17,5 @@ Cmake 3.6 or greater
 ```source install.bash``` 
 
 Test it with 
-```python3 test_mul.py``` 
+```python3 test_prescan.py``` 
  

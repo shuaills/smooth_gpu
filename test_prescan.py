@@ -43,12 +43,10 @@ def smooth(inlist: List[float], h: int) -> List[float]:
 def test_smooth_time(inlist, h):
     t0 = time.time()
     smoothed_cuda = gpu_library.runSmoothListWithBlellochScan(np.array(inlist), h)
-    print(len(smoothed_cuda))
     cuda_time = time.time() - t0
     
     t0 = time.time()
     smoothed_python = smooth(inlist, h)
-    print(len(smoothed_python))
     python_time = time.time() - t0
 
     print(f"Time taken by Python prefix method: {python_time} seconds")
