@@ -1,43 +1,38 @@
 from typing import List
 
-def smooth(inlist, h):
+def smooth(inlist: List[float], h: int) -> List[float]:
     """
-    This function performs a basic smoothing of inlist and returns the result (outlist).
-    Both lists have the same length, N. Each item in inlist is assumed to have type 'float',
-    and 'h' is assumed to be an integer.
-    For each i, outlist[i] will be the average of inlist[k] over all k that satisfy
-    i-h <= k <= i+h and 0 <= k <= N-1.
+    Smooths a list using a window size of 2*h+1.
+    Time Complexity: O(N), where N is the length of inlist.
+
+    Parameters:
+    - inlist: Input list of floats.
+    - h: Half-size of the smoothing window.
+    Returns:
+    - A list of smoothed floats of the same length as inlist.
     """
     N = len(inlist)
     if N == 0:
         return []
     
-    outlist = [0.0] * N  # Initialize outlist with zeros
+    outlist = [0.0] * N
+    running_sum = sum(inlist[:min(h + 1, N)])  
     
-    # Initialize a running sum with the first "h" elements in inlist
-    running_sum = sum(inlist[:min(h+1, N)])
+    # Initialize the first smoothed value
+    outlist[0] = running_sum / min(h + 1, N)  
     
-    # Calculate outlist[0]
-    num_elements = min(h + 1, N)
-    outlist[0] = running_sum / num_elements
-    
-    # Calculate outlist[i] for 1 <= i < N
     for i in range(1, N):
-        # Add the next element to the running sum if it is within the right boundary
-        next_index = i + h
-        if next_index < N:
-            running_sum += inlist[next_index]
+        next_boundary = i + h
+        prev_boundary = i - h - 1
+
+        # Update the running sum based on the window boundaries
+        if next_boundary < N:
+            running_sum += inlist[next_boundary]
+        if prev_boundary >= 0:
+            running_sum -= inlist[prev_boundary]
         
-        # Remove the element that is now out of the window from the running sum if it is within the left boundary
-        prev_index = i - h - 1
-        if prev_index >= 0:
-            running_sum -= inlist[prev_index]
-        
-        # Calculate the number of elements in the current window
-        num_elements = min(i + h, N-1) - max(0, i - h) + 1
-        
-        # Calculate outlist[i]
-        outlist[i] = running_sum / num_elements
+        window_size = min(i + h, N - 1) - max(0, i - h) + 1
+        outlist[i] = running_sum / window_size
     
     return outlist
 
@@ -64,7 +59,7 @@ def smooth_prefix(inlist: List[float], h: int) -> List[float]:
 import random
 import time
 
-inlist = [random.random() for _ in range(10**8)]
+inlist = [random.random() for _ in range(10**6)]
 h = 1000
 
 def test(func):

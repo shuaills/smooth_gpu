@@ -1,25 +1,16 @@
-#include <iostream>
-#include <sstream>
 #include <vector>
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
 #include <algorithm>
-
 #include <cuda_runtime.h>
 #include <cuda.h>
-
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/transform.h>
 #include <thrust/scan.h>
 #include <thrust/iterator/counting_iterator.h>
-
+#include <thrust/execution_policy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-
 
 __device__ double calculate_smooth_value(const double* prefix_sum, int i, int h, int N) {
     double left_sum = (i - h - 1 >= 0) ? prefix_sum[i - h - 1] : 0.0f;
@@ -79,6 +70,5 @@ std::vector<double> runSmoothListWithBlellochScan(const std::vector<double>& h_i
 }
 
 PYBIND11_MODULE(gpu_library, m) {
-    //m.def("smooth_cuda", &smooth_cuda, "A function that smooths a list using CUDA");
     m.def("runSmoothListWithBlellochScan", &runSmoothListWithBlellochScan, "A function that smooths a list using Blelloch Sum Scan Algorithm");
 }

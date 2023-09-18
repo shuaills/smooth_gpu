@@ -1,58 +1,77 @@
 import gpu_library
 import numpy as np
 import time
-import numpy as np
+from typing import List
 
-def find_first_mismatch_index(arr1, arr2, tol=1e-6):
+
+def smooth(inlist: List[float], h: int) -> List[float]:
     """
-    Find the index of the first mismatch between two arrays within a given tolerance.
+    Smooths a list using a window size of 2*h+1.
+    Time Complexity: O(N), where N is the length of inlist.
 
     Parameters:
-        arr1, arr2 (array-like): Arrays to compare
-        tol (float): Tolerance for considering two elements to be equal
-
+    - inlist: Input list of floats.
+    - h: Half-size of the smoothing window.
     Returns:
-        int: Index of the first mismatch; -1 if no mismatch within the given tolerance
+    - A list of smoothed floats of the same length as inlist.
     """
-    for i, (a, b) in enumerate(zip(arr1, arr2)):
-        if not np.isclose(a, b, atol=tol):
-            return i
-    return -1
+    N = len(inlist)
+    if N == 0:
+        return []
+    
+    outlist = [0.0] * N
+    running_sum = sum(inlist[:min(h + 1, N)])  
+    
+    # Initialize the first smoothed value
+    outlist[0] = running_sum / min(h + 1, N)  
+    
+    for i in range(1, N):
+        next_boundary = i + h
+        prev_boundary = i - h - 1
 
-
-def test_prescan(input_array, h_value, should_print=True):
-    try:
-        # Timing the GPU operation
-        start_time = time.time()
-        gpu_output = gpu_library.prescan(input_array)
-        gpu_time = time.time() - start_time
+        # Update the running sum based on the window boundaries
+        if next_boundary < N:
+            running_sum += inlist[next_boundary]
+        if prev_boundary >= 0:
+            running_sum -= inlist[prev_boundary]
         
-        # Timing the CPU operation
-        start_time = time.time()
-        cpu_output = np.zeros_like(input_array, dtype=np.float32)
-        for i in range(1, len(input_array)):
-            cpu_output[i] = cpu_output[i-1] + input_array[i-1]
-        cpu_time = time.time() - start_time
+        window_size = min(i + h, N - 1) - max(0, i - h) + 1
+        outlist[i] = running_sum / window_size
+    
+    return outlist
 
-        # Find the index of the first mismatch
-        mismatch_index = find_first_mismatch_index(gpu_output, cpu_output)
-        
-        if should_print:
-            if mismatch_index == -1:
-                print(f"All values match. GPU time: {gpu_time:.6f} seconds, CPU time: {cpu_time:.6f} seconds")
-            else:
-                print(f"First mismatch at index {mismatch_index}. GPU: {gpu_output[mismatch_index]}, CPU: {cpu_output[mismatch_index]}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+def test_smooth_time(inlist, h):
+    t0 = time.time()
+    smoothed_cuda = gpu_library.runSmoothListWithBlellochScan(np.array(inlist), h)
+    print(len(smoothed_cuda))
+    cuda_time = time.time() - t0
+    
+    t0 = time.time()
+    smoothed_python = smooth(inlist, h)
+    print(len(smoothed_python))
+    python_time = time.time() - t0
 
-# Medium-scale test
-N = 10**4
-h_value = 5
-input_array = np.arange(N, dtype=np.float32)
-test_prescan(input_array, h_value, should_print=True)
+    print(f"Time taken by Python prefix method: {python_time} seconds")
+    print(f"Time taken by Cuda method: {cuda_time} seconds")
 
-# Large-scale test
-N = 10**6
-h_value = 5
-input_array = np.arange(N, dtype=np.float32)
-test_prescan(input_array, h_value, should_print=True)
+    print(f"First 10 values by Python prefix method: {smoothed_python[:10]} ")
+    print(f"First 10 values CUDA method: {smoothed_cuda[:10]} ")
+
+    print(f"Last 10 values by Python prefix method: {smoothed_python[-10:]} ")
+    print(f"Last 10 values CUDA method: {smoothed_cuda[-10:]} ")
+
+    start_diff_index = -1
+    for i in range(len(smoothed_python)):
+        if not np.isclose(smoothed_python[i], smoothed_cuda[i], atol=1e-6):
+            start_diff_index = i
+            break
+
+    return start_diff_index
+
+if __name__ == "__main__":
+    N = 1000000000 
+    h = 1000  
+    test_list = list(range(N)) 
+
+    index = test_smooth_time(test_list, h)
+    print(index)
