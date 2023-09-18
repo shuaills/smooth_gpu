@@ -67,7 +67,7 @@ def test_smooth_time(inlist, h):
     return start_diff_index
 
 if __name__ == "__main__":
-    N = 1000000000 
+    N = 100000000 
     h = 1000  
     test_list = list(range(N)) 
 
